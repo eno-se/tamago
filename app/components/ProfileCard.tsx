@@ -1,3 +1,5 @@
+"use client"
+
 interface ProfileCardProps {
   creatorName: string
   slug: string
