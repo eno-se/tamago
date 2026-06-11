@@ -1,0 +1,244 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String?   @unique
+  emailVerified  DateTime?
+  name           String?
+  image          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  creator         Creator?
+  fanProfile      FanProfile?
+  taps            Tap[]
+  fanEggStats     FanEggStats[]
+  finalTapResults Result[]   @relation("FinalTapUser")
+  engravings      ResultEngraving[]
+  watchLists      WatchList[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Creator {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  creatorName    String
+  instagramId    String?
+  iconUrl        String?
+  profileMessage String?
+  linkUrl        String?
+  linkLabel      String?
+  slug           String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eggs        Egg[]
+  results     Result[]
+  socialLinks SocialLink[]
+
+  @@map("creators")
+}
+
+model SocialLink {
+  id        String   @id @default(cuid())
+  creatorId String
+  platform  String
+  url       String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  creator Creator @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
+  @@map("social_links")
+}
+
+model Egg {
+  id              String    @id @default(cuid())
+  creatorId       String
+  eggNumber       Int       @default(1)
+  title           String
+  status          EggStatus @default(ACTIVE)
+  isPublic        Boolean   @default(false)
+  targetTapCount  Int       @default(1000000)
+  currentTapCount Int       @default(0)
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  creator     Creator       @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  taps        Tap[]
+  fanEggStats FanEggStats[]
+  result      Result?
+  watchLists  WatchList[]
+
+  // ランキングクエリ用インデックス
+  @@index([status, isPublic, currentTapCount(sort: Desc)])
+  @@map("eggs")
+}
+
+enum EggStatus {
+  ACTIVE
+  COMPLETED
+}
+
+model FanProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  engravingName  String
+  allowEngraving Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fan_profiles")
+}
+
+model Tap {
+  id        String   @id @default(cuid())
+  eggId     String
+  userId    String
+  tapDate   DateTime @db.Date
+  tapType   TapType  @default(NORMAL)
+  createdAt DateTime @default(now())
+
+  egg  Egg  @relation(fields: [eggId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eggId, userId, tapDate, tapType])
+  @@map("taps")
+}
+
+enum TapType {
+  NORMAL
+  AD_BONUS
+}
+
+model FanEggStats {
+  id               String    @id @default(cuid())
+  eggId            String
+  userId           String
+  currentStreakDays Int       @default(0)
+  maxStreakDays     Int       @default(0)
+  totalTapDays      Int       @default(0)
+  firstTapCount     Int       @default(0)
+  lastTapDate       DateTime? @db.Date
+  firstTapAt        DateTime  @default(now())
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  egg  Egg  @relation(fields: [eggId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eggId, userId])
+  // streak ランキングの groupBy + WHERE 用インデックス
+  @@index([currentStreakDays, eggId])
+  @@map("fan_egg_stats")
+}
+
+model Result {
+  id             String     @id @default(cuid())
+  eggId          String     @unique
+  creatorId      String
+  resultType     ResultType @default(SILVER_SHIELD)
+  totalTaps      Int
+  uniqueFans     Int
+  finalTapUserId String?
+  completedAt    DateTime
+  publicUrl      String?
+  createdAt      DateTime   @default(now())
+
+  egg          Egg               @relation(fields: [eggId], references: [id], onDelete: Cascade)
+  creator      Creator           @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  finalTapUser User?             @relation("FinalTapUser", fields: [finalTapUserId], references: [id])
+  engravings   ResultEngraving[]
+
+  @@map("results")
+}
+
+enum ResultType {
+  SILVER_SHIELD
+  GOLD_SHIELD
+  UNKNOWN
+}
+
+model ResultEngraving {
+  id            String   @id @default(cuid())
+  resultId      String
+  userId        String
+  engravingName String
+  rank          Int
+  streakDays    Int
+  totalTapDays  Int
+  createdAt     DateTime @default(now())
+
+  result Result @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("result_engravings")
+}
+
+model WatchList {
+  id        String   @id @default(cuid())
+  userId    String
+  eggId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  egg  Egg  @relation(fields: [eggId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eggId])
+  @@map("watch_lists")
+}
