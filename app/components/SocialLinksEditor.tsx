@@ -58,7 +58,7 @@ function PencilIcon() {
 
 export default function SocialLinksEditor({ initialLinks }: Props) {
   const [links, setLinks] = useState(initialLinks)
-  const [platform, setPlatform] = useState(PLATFORMS[0])
+  const [platform, setPlatform] = useState<typeof PLATFORMS[number]>(PLATFORMS[0])
   const [url, setUrl] = useState("")
   const [isPending, startTransition] = useTransition()
   const [expanded, setExpanded] = useState(false)
@@ -133,7 +133,8 @@ export default function SocialLinksEditor({ initialLinks }: Props) {
           <div className="flex gap-2">
             <select
               value={platform}
-              onChange={(e) => setPlatform(e.target.value)}
+              onChange={(e) => setPlatform(e.target.value as typeof PLATFORMS[number])}
+
               className="bg-stone-800 text-stone-300 text-xs rounded-lg px-2 py-2 outline-none shrink-0"
             >
               {PLATFORMS.map((p) => (
