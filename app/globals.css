@@ -117,18 +117,44 @@ body {
 
 .glass-card {
   background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.13) 0%,
-    rgba(255, 255, 255, 0.05) 100%
+    135deg,
+    rgba(40, 70, 50, 0.54) 0%,
+    rgba(18, 42, 30, 0.48) 100%
   );
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(213, 191, 128, 0.20);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.30),
-    0 16px 40px rgba(0, 0, 0, 0.20);
+    0 10px 30px rgba(0, 0, 0, 0.30),
+    0 0 18px rgba(200, 168, 78, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.sub-btn {
+  background: linear-gradient(
+    135deg,
+    rgba(16, 38, 26, 0.72) 0%,
+    rgba(9, 24, 16, 0.65) 100%
+  );
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(213, 191, 128, 0.18);
+  border-radius: 14px;
+  color: rgba(205, 195, 165, 0.65);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  display: block;
+  text-align: center;
+}
+
+.sub-btn:hover,
+.sub-btn:active {
+  background: linear-gradient(
+    135deg,
+    rgba(26, 54, 38, 0.78) 0%,
+    rgba(14, 34, 22, 0.70) 100%
+  );
+  border-color: rgba(213, 191, 128, 0.32);
+  color: rgba(225, 215, 182, 0.90);
 }
 
 @keyframes eggFloat {
